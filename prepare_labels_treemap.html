@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+
+    <title>D3-Labeler-Canvas</title>
+<link href="https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz&amp;subset=cyrillic" rel="stylesheet"> 
+    <style>
+
+
+
+        body {
+            font: 10px sans-serif;
+        }
+
+rect {
+  fill: cadetblue;
+  opacity: 0.3;
+  stroke: white;
+}
+
+
+        h2 {
+            font-size: 22px;
+        }
+
+        div {
+            margin-top: 35px;
+            margin-bottom: 0px;
+            margin-left: 150px;
+        }
+
+        p {
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        @font-face {
+  		font-family: droid-mono;
+  		src: url(DroidSansMono.ttf)
+	}
+
+    </style>
+</head>
+
+<body>
+
+<div>
+
+    <h2>Теми новин</h2>
+
+
+
+</div>
+ 
+ <!--svg width="1000" height="800">
+    <g></g>
+  </svg-->
+
+<script src="d3.v4.min.js" charset="utf-8"></script>
+<script src="labeler.js"></script>
+<script>
+
+    // Global variables
+    var anchor_array = [],
+            label_array = [],
+            margin = {top: 20, right: 50, bottom: 50, left: 150},
+            width = 1900 - margin.left - margin.right,
+            height = 1500 - margin.top - margin.bottom,
+            x_mean = width / 2,
+            y_mean = height / 2,
+            offset = 4,
+            radius = 7;
+
+      const words_per_row = 3;
+      const nrows = 3;
+      const font_size_s = 11;
+      const font_size_b = 24;
+      const main_font = "droid-mono";
+      const second_font = "Yanone Kaffeesatz";
+      const between_lines_interval = 0.1;
+      // const colors = ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462'];
+      // const colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'];
+      // const colors = ["#60e3ad", "#c1498c", "#4623a3", "#c1e64e", "#3a87cd", "#7d5aad"];
+
+      const colors = {};
+      const color_codes = ["#a03532", "#c1498c", "#4623a3", "#643c5a", "#3a87cd", "#05b66d"];
+      const class_names = ["Влада/політики", "Війна", "Росія", "Про Україну", "Новини з соцмереж", "Церква"];
+      class_names.map(function(d, i){ colors[d] = color_codes[i] });
+
+    var anchor_data, labels, circ, links, bounds;
+
+
+    var canvas = d3.select("body").append("canvas")
+            .attr("width", width)
+            .attr("height", height);
+
+    var context = canvas.node().getContext("2d");
+
+
+    canvas.call(d3.zoom()
+    	   .scaleExtent([0.5, 4])
+           .on("zoom", zoomed));
+
+    function get_rows(str, nrows){
+
+      var rows = [];
+      var words = str.split(' ');
+      for(var i = 0; i < words.length; i++){
+        var current_row = Math.floor(i/words_per_row);
+        if( i % words_per_row == 0) { 
+		      rows[current_row] = []
+        }
+	      rows[current_row].push(words[i]);  
+      }
+      return rows.slice(0, nrows);
+    }
+
+
+
+    var k = 1;  // zoom level
+    function zoomed(){
+
+      	context.save();
+     	  context.clearRect(0, 0, width, height);
+      	context.translate(d3.event.transform.x, d3.event.transform.y);
+      	context.scale(d3.event.transform.k, d3.event.transform.k);
+      	k = d3.event.transform.k;
+      	drawLabels(k);
+      	context.restore();
+// https://github.com/d3/d3-zoom#transform_invert
+// console.log("scale: ", k, "zoom transform: ", d3.event.transform);
+    }
+
+
+
+
+
+    function drawLabels(k){
+        var font_size;
+        context.clearRect(0, 0, width, height);
+        
+
+        for (var i = 0; i < label_array.length; i++) {
+
+            context.fillStyle = label_array[i].color;
+
+            if(label_array[i].level < 3){ // in case of topic names
+
+ 	      //context.clearRect( label_array[i].x, label_array[i].y,  
+	      //			 label_array[i].width, label_array[i].height);
+              font_size = font_size_b;
+              ////// if(k < 0.75){ font_size = font_size_b }
+              font_size = font_size - 6*(label_array[i].level - 1);
+
+              context.font = `${font_size}px "${main_font}"`;
+
+              context.fillText(label_array[i].name, label_array[i].x, label_array[i].y - 
+                font_size / (label_array[i].level == 2 ? 1 : 2));
+
+        //       context.beginPath();
+	       //    context.rect(label_array[i].x, label_array[i].y - label_array[i].height, 
+	       //    		label_array[i].width, label_array[i].height);
+		      // context.lineWidth = 1;
+		      // context.strokeStyle = 'black';
+		      // context.stroke();
+		      // context.closePath();
+
+
+            } else {  //news items
+              if(k > 0.5){
+              	font_size =  Math.floor(Math.sqrt( (font_size_s * k) )); 
+              	context.font = `${font_size}px "${second_font}"`;
+              	var boo = label_array[i]; 
+              	//context.fillText(boo.rows[0].join(' '), boo.x, boo.y);
+
+
+              	for(var j = 0; j < boo.rows.length; j++){
+		
+                	context.fillText(boo.rows[j].join(' '), boo.x, 
+						        boo.y - boo.height + j * font_size * (1+between_lines_interval));
+
+              	}
+              	// and site name
+                context.font = `${font_size}px "${second_font}"`;
+                context.fillStyle = 'gray';
+				        context.fillText(boo.url, boo.x, 
+					         boo.y - boo.height + j * font_size * (1 + between_lines_interval));
+
+          // draw box around text, for debugging      
+			    context.beginPath();
+	        context.rect(label_array[i].x, label_array[i].y - label_array[i].height - font_size, 
+	          		label_array[i].width, label_array[i].height);
+		      context.lineWidth = 0.5;
+		      context.strokeStyle = 'red';
+		      context.stroke();
+		      context.closePath();
+
+              } 
+
+            }
+
+
+        }
+
+
+     }
+
+
+    // Functions
+
+    function get_class(label){
+      if(label.depth <= 1){
+        return label.data.name;
+      } else {
+        return get_class(label.parent);
+      }
+    }
+
+
+    function randomize(data_array) {
+        anchor_array = [];
+        label_array = [];
+        var radius = 5; // dumb
+
+        for(var i = 0; i < data_array.length; i++){
+            var e = data_array[i];
+            var xval = (e.x0 + e.x1)/2, yval = (e.y0 + e.y1)/2;
+            if(e.depth > 0){
+             
+              var nrows = e.depth == 3 ? 3 : 1;
+              var rows = get_rows(e.data.name, nrows)  
+              // Put label and anchor positions into arrays
+              anchor_array.push({x: xval, y: yval, r: radius});
+              label_array.push({
+                  x: xval,
+                  y: yval,
+                  x_start: xval,
+                  y_start: yval,
+                  name: e.data.name,
+                  url: e.data.url,
+                  width: 0.0,
+                  height: 0.0,
+                  color: colors[get_class(e)],
+                  level: e.depth, 
+                  rows: rows 
+              });
+            }
+         }   
+
+        // Defining width and height from the font size
+        for (var i = 0; i < label_array.length; i++) {
+          if( label_array[i].level < 3){ // big titles
+            label_array[i].width = font_size_b * label_array[i].name.length / 1.5;
+            label_array[i].height = 1.1*font_size_b ;
+          } else {  // small titles 
+            let current_label = label_array[i];    
+            let max_length = Math.max.apply(null, current_label.rows.map(a => a.join(' ').length)) // max length of string
+            label_array[i].width =  max_length * font_size_s / 4; // still depends on font size
+            label_array[i].height = ((nrows + 2) * font_size_s * (1 + between_lines_interval) / 1.5)/1; 
+//console.log(label_array[i].width,  label_array[i].height);
+          }
+        }
+
+        d3.labeler()
+                .label(label_array)
+                .anchor(anchor_array)
+                .width(width)
+                .height(height)
+                .start(6000);
+
+
+        // results 
+        label_array = label_array.map(function(e){
+        	e.x = ~~e.x;
+        	e.y = ~~e.y;
+        	e.x_start = ~~e.x_start;
+        	e.y_start = ~~e.y_start;
+        	return e;
+        })
+
+        label_array.sort(compare);
+        console.log( JSON.stringify(label_array));
+        //console.log( label_array );
+
+	       drawLabels(1);
+
+    }
+    
+
+function compare(a,b) {
+  if (a.level < b.level)
+    return 1;
+  if (a.level > b.level)
+    return -1;
+  return 0;
+}
+   
+
+    // Default starting parameters
+    // 50 labels, uniformly distributed in x, y
+
+    d3.json("news.json", function(error, data) {
+      if (error) console.log(error);
+      //console.log(data);
+
+      // create sommetric tree-like structure
+      for(var l0 = 0; l0 < data.length; l0++){
+
+        for(var l1 = 0; l1 < data[l0]['siblings'].length; l1++){
+          var siblings = [];
+          for(var l2 = 0; l2 < data[l0]['siblings'][l1]['news_item'][0].length; l2++ ){
+            var obj = data[l0]['siblings'][l1]['news_item'];
+            siblings[l2] = {"name": obj[0][l2], 'url': obj[1][l2], 'value': obj[0][l2].length }
+          }
+          data[l0]['siblings'][l1]['siblings'] = siblings;
+          delete data[l0]['siblings'][l1]['news_item'];
+        }
+      } 
+      data = {name: 'root', siblings: data};
+//console.log(data);
+
+      var treemap = d3.treemap()
+        .size([width*0.95, height*0.95])
+        .padding(2);
+
+      var root = d3.hierarchy(data, function(d) {return d.siblings;})
+
+      root.sum(function(d) {
+        return +d.value;
+      });
+      
+      treemap(root);
+
+// d3.select('svg g')
+//   .selectAll('rect')
+//   .data(root.descendants())
+//   .enter()
+//   .append('rect')
+//   .attr('x', function(d) { return d.x0; })
+//   .attr('y', function(d) { return d.y0; })
+//   .attr('width', function(d) { return d.x1 - d.x0; })
+//   .attr('height', function(d) { return d.y1 - d.y0; })
+
+
+      //console.log(root.descendants());  
+      randomize(root.descendants());
+    });
+
+       
+
+</script>
