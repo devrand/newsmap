@@ -39,14 +39,14 @@
       const main_font = "droid-mono";
       const second_font = "Yanone Kaffeesatz";
       const between_lines_interval = 0.1;
-      // const colors = ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462'];
-      // const colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'];
-      // const colors = ["#60e3ad", "#c1498c", "#4623a3", "#c1e64e", "#3a87cd", "#7d5aad"];
+      //const color_codes = ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462'];
+      const color_codes = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'];
+      //const color_codes = ["#60e3ad", "#c1498c", "#4623a3", "#c1e64e", "#3a87cd", "#7d5aad"];
 
 
       const colors = {};
-      const color_codes = ["#a03532", "#c1498c", "#4623a3", "#643c5a", "#3a87cd", "#05b66d"];
-      const class_names = ["Влада/політики", "Війна", "Росія", "Про Україну", "Новини з соцмереж", "Церква"];
+      const class_names = ["#a03532", "#c1498c", "#4623a3", "#643c5a", "#3a87cd", "#05b66d"];
+      //const class_names = ["Влада/політики", "Війна", "Росія", "Про Україну", "Новини з соцмереж", "Церква"];
       class_names.map(function(d, i){ colors[d] = color_codes[i] });
 
     var anchor_data, labels, circ, links, bounds;
@@ -75,7 +75,7 @@
 
         for (var i = 0; i < label_array.length; i++) {
 
-            context.fillStyle = label_array[i].color;
+            context.fillStyle = colors[label_array[i].color];
 
             if(label_array[i].level < 3){ // in case of topic names
 
@@ -177,16 +177,16 @@
       // translate to saakashvili
       var new_point = get_translation(label_array[728], width, height, k)
       //var new_point = get_translation(286/width, 83/height,  width, height, k)
-      setTimeout(zoom_to(new_point.x, new_point.y, k), 2000);
+      //setTimeout(zoom_to(new_point.x, new_point.y, k), 2000);
 
 
       // translate to Poroshenko
       new_point = get_translation(label_array[730], width, height, k)
-      setTimeout(zoom_to(new_point.x, new_point.y, k), 5000);
+      //setTimeout(zoom_to(new_point.x, new_point.y, k), 5000);
 
       // 'На Украине ...'	
       new_point = get_translation(label_array[741], width, height, k)
-      setTimeout(zoom_to(new_point.x, new_point.y, k), 7000);
+      //setTimeout(zoom_to(new_point.x, new_point.y, k), 7000);
 
       //drawLabels(1);
     });
