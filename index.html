@@ -44,7 +44,7 @@
 
 </div>
 
-<script src="d3.v4.min.js" charset="utf-8"></script>
+<script src="d3.v5.min.js" charset="utf-8"></script>
 <script>
 
     // Global variables
@@ -191,11 +191,9 @@
 
 
 
-    // Default starting parameters
-    // 50 labels, uniformly distributed in x, y
 
-    d3.json("labels.json", function(error, data) {
-      if (error) console.log(error);
+    d3.json("./labels.json").then(function(data) {
+      //if (error) console.log(error);
       //console.log(data);
       label_array = data;
       canvas = d3.select("body").append("canvas")
@@ -208,11 +206,11 @@
          .scaleExtent([0.5, 4])
            .on("zoom", zoomed));
 
+      (zoom_to(60, 155, 0.5))();
+      //drawLabels(1);
 
-      drawLabels(1);
-
-      var x1=-534, y1=-1470, k1=3.5;
-      setTimeout(zoom_to(x1, y1, k1), 2000);
+//      var x1=-534, y1=-1470, k1=3.5;
+//      setTimeout(zoom_to(x1, y1, k1), 2000);
 
     });
 
