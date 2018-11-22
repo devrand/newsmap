@@ -35,7 +35,7 @@
     const second_font = "Yanone Kaffeesatz";
     const between_lines_interval = 0.1;
 
-    const color_codes = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'];
+    const color_codes = ['#d95f02', '#66a61e', '#e7298a','#7570b3','#1b9e77','#e6ab02'];
     const colors = {};
     const class_names = ["#a03532", "#c1498c", "#4623a3", "#643c5a", "#3a87cd", "#05b66d"];
       //const class_names = ["Влада/політики", "Війна", "Росія", "Про Україну", "Новини з соцмереж", "Церква"];
@@ -121,7 +121,7 @@
       return d3.zoomIdentity
           .translate(width / 2, height / 2)
           .scale(k)
-          .translate(-point.x - correction, -point.y);i // center topic name on screen
+          .translate(-point.x - correction, -point.y); // center topic name on screen
     }
     
     
@@ -154,7 +154,7 @@
 
 
       // ATTENTION!!! uncomment it to switch ON zoom with all mouse/touch events	
-      // canvas.call(zoom);
+       canvas.call(zoom);
 
 
     });
