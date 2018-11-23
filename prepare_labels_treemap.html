@@ -3,7 +3,7 @@
 
 <head>
 
-    <title>D3-Labeler-Canvas</title>
+    <title>Create label placement for news map</title>
 <link href="https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz&amp;subset=cyrillic" rel="stylesheet"> 
     <style>
 
@@ -65,17 +65,17 @@ rect {
     var anchor_array = [],
             label_array = [],
             margin = {top: 20, right: 50, bottom: 50, left: 150},
-            width = 1900 - margin.left - margin.right,
-            height = 1500 - margin.top - margin.bottom,
+            width = 2700 - margin.left - margin.right,
+            height = 2200 - margin.top - margin.bottom,
             x_mean = width / 2,
             y_mean = height / 2,
-            offset = 4,
-            radius = 7;
+            offset = 4,  // non-relevant
+            radius = 1;  // non-relevant
 
       const words_per_row = 3;
       const nrows = 3;
-      const font_size_s = 11;
-      const font_size_b = 24;
+      const font_size_s = 11;  // fonts size for smallest items
+      const font_size_b = 26;  // font size for big labels
       const main_font = "droid-mono";
       const second_font = "Yanone Kaffeesatz";
       const between_lines_interval = 0.1;
@@ -85,8 +85,9 @@ rect {
 
       const colors = {};
       const color_codes = ["#a03532", "#c1498c", "#4623a3", "#643c5a", "#3a87cd", "#05b66d"];
+      // top-level names
       const class_names = ["Влада/політики", "Війна", "Росія", "Про Україну", "Новини з соцмереж", "Церква"];
-      class_names.map(function(d, i){ colors[d] = color_codes[i] });
+      class_names.map(function(d, i){ colors[d] = color_codes[i] }); // connect names to colors
 
     var anchor_data, labels, circ, links, bounds;
 
@@ -102,6 +103,7 @@ rect {
     	   .scaleExtent([0.5, 4])
            .on("zoom", zoomed));
 
+    // split name to needed number of rows, nrows to print text as multyline
     function get_rows(str, nrows){
 
       var rows = [];
@@ -117,22 +119,18 @@ rect {
     }
 
 
-
+    // invoked every time with zoom event
     var k = 1;  // zoom level
     function zoomed(){
 
       	context.save();
-     	  context.clearRect(0, 0, width, height);
+     	context.clearRect(0, 0, width, height);
       	context.translate(d3.event.transform.x, d3.event.transform.y);
       	context.scale(d3.event.transform.k, d3.event.transform.k);
       	k = d3.event.transform.k;
       	drawLabels(k);
       	context.restore();
-// https://github.com/d3/d3-zoom#transform_invert
-// console.log("scale: ", k, "zoom transform: ", d3.event.transform);
     }
-
-
 
 
 
@@ -147,10 +145,7 @@ rect {
 
             if(label_array[i].level < 3){ // in case of topic names
 
- 	      //context.clearRect( label_array[i].x, label_array[i].y,  
-	      //			 label_array[i].width, label_array[i].height);
               font_size = font_size_b;
-              ////// if(k < 0.75){ font_size = font_size_b }
               font_size = font_size - 6*(label_array[i].level - 1);
 
               context.font = `${font_size}px "${main_font}"`;
@@ -158,13 +153,14 @@ rect {
               context.fillText(label_array[i].name, label_array[i].x, label_array[i].y - 
                 font_size / (label_array[i].level == 2 ? 1 : 2));
 
-        //       context.beginPath();
-	       //    context.rect(label_array[i].x, label_array[i].y - label_array[i].height, 
-	       //    		label_array[i].width, label_array[i].height);
-		      // context.lineWidth = 1;
-		      // context.strokeStyle = 'black';
-		      // context.stroke();
-		      // context.closePath();
+              // draw box around text, for debugging      
+              context.beginPath();
+	      context.rect(label_array[i].x, label_array[i].y - label_array[i].height, 
+	           		label_array[i].width, label_array[i].height);
+	      context.lineWidth = 1;
+	      context.strokeStyle = 'black';
+	      context.stroke();
+	      context.closePath();
 
 
             } else {  //news items
@@ -176,11 +172,10 @@ rect {
 
 
               	for(var j = 0; j < boo.rows.length; j++){
-		
-                	context.fillText(boo.rows[j].join(' '), boo.x, 
-						        boo.y - boo.height + j * font_size * (1+between_lines_interval));
-
+                  context.fillText(boo.rows[j].join(' '), boo.x, 
+			boo.y - boo.height + j * font_size * (1+between_lines_interval));
               	}
+
               	// and site name
                 context.font = `${font_size}px "${second_font}"`;
                 context.fillStyle = 'gray';
@@ -188,27 +183,27 @@ rect {
 					         boo.y - boo.height + j * font_size * (1 + between_lines_interval));
 
           // draw box around text, for debugging      
-			    context.beginPath();
+/*
+	        context.beginPath();
 	        context.rect(label_array[i].x, label_array[i].y - label_array[i].height - font_size, 
 	          		label_array[i].width, label_array[i].height);
-		      context.lineWidth = 0.5;
-		      context.strokeStyle = 'red';
-		      context.stroke();
-		      context.closePath();
-
+		context.lineWidth = 0.5;
+		context.strokeStyle = 'red';
+		context.stroke();
+		context.closePath();
+*/
               } 
 
             }
 
-
         }
-
 
      }
 
 
     // Functions
 
+    // get name of root topic for specific news item, i.e. it's class (coded by color later)
     function get_class(label){
       if(label.depth <= 1){
         return label.data.name;
@@ -217,19 +212,23 @@ rect {
       }
     }
 
-
-    function randomize(data_array) {
+    // prepare labels for d3-labeler algo (simulating annealing) 
+    function place_labels(data_array) {
         anchor_array = [];
         label_array = [];
         var radius = 5; // dumb
 
         for(var i = 0; i < data_array.length; i++){
             var e = data_array[i];
-            var xval = (e.x0 + e.x1)/2, yval = (e.y0 + e.y1)/2;
-            if(e.depth > 0){
+            var xval = (e.x0 + e.x1)/2, yval = (e.y0 + e.y1)/2; // place label into the center of treemap rectangle
+								// initially	
+            if(e.depth > 0){					
              
-              var nrows = e.depth == 3 ? 3 : 1;
-              var rows = get_rows(e.data.name, nrows)  
+              var nrows = e.depth == 3 ? 3 : 1;			// print only one row for topic names
+              var rows = get_rows(e.data.name, nrows);
+
+              var sum = rows.reduce(function(memo, row) { return memo + ' ' +row.join(' '); }, '');  
+	      var period = sum.length > 0.9 * e.data.name.length ? false : true;
               // Put label and anchor positions into arrays
               anchor_array.push({x: xval, y: yval, r: radius});
               label_array.push({
@@ -237,14 +236,15 @@ rect {
                   y: yval,
                   x_start: xval,
                   y_start: yval,
-                  name: e.data.name,
+                  name: e.data.name,		// whole text of message (aka name)
                   url: e.data.url,
                   width: 0.0,
                   height: 0.0,
-                  color: colors[get_class(e)],
-                  group: get_class(e),
+                  color: colors[get_class(e)],  // for backward compatibility
+                  group: get_class(e),		// highest topic name for message
                   level: e.depth, 
-                  rows: rows 
+                  rows: rows, 			// name splitted by rows
+                  period: period
               });
             }
          }   
@@ -252,14 +252,15 @@ rect {
         // Defining width and height from the font size
         for (var i = 0; i < label_array.length; i++) {
           if( label_array[i].level < 3){ // big titles
+	    // TODO: make this calculation not so stupid
             label_array[i].width = font_size_b * label_array[i].name.length / 1.5;
-            label_array[i].height = 1.1*font_size_b ;
+            label_array[i].height = 1.3*font_size_b ;
           } else {  // small titles 
             let current_label = label_array[i];    
             let max_length = Math.max.apply(null, current_label.rows.map(a => a.join(' ').length)) // max length of string
+	    // TODO: make this calculation not so stupid
             label_array[i].width =  max_length * font_size_s / 4; // still depends on font size
             label_array[i].height = ((nrows + 2) * font_size_s * (1 + between_lines_interval) / 1.5)/1; 
-//console.log(label_array[i].width,  label_array[i].height);
           }
         }
 
@@ -268,7 +269,7 @@ rect {
                 .anchor(anchor_array)
                 .width(width)
                 .height(height)
-                .start(6000);
+                .start(4000);
 
 
         // results 
@@ -280,32 +281,33 @@ rect {
         	return e;
         })
 
-        label_array.sort(compare);
-        console.log( JSON.stringify(label_array));
-        //console.log( label_array );
+        label_array.sort(compare); // place names for high levels on top, to prevent overwrites
 
-	       drawLabels(1);
+	// copy this from console as a result, you have to manually save it as labels.json
+        console.log( JSON.stringify(label_array));
+	
+	// show them for testing purposes
+	drawLabels(1);
 
     }
     
 
-function compare(a,b) {
-  if (a.level < b.level)
-    return 1;
-  if (a.level > b.level)
-    return -1;
-  return 0;
-}
+    function compare(a,b) {
+      if (a.level < b.level)
+        return 1;
+      if (a.level > b.level)
+        return -1;
+      return 0;
+    }
    
 
-    // Default starting parameters
-    // 50 labels, uniformly distributed in x, y
 
     d3.json("news.json", function(error, data) {
       if (error) console.log(error);
-      //console.log(data);
 
-      // create sommetric tree-like structure
+      // create simmetric tree-like structure (initial news.json is from python script. see its structure)
+      // probably it is better to change output data in python, for the first place 
+/*
       for(var l0 = 0; l0 < data.length; l0++){
 
         for(var l1 = 0; l1 < data[l0]['siblings'].length; l1++){
@@ -318,34 +320,40 @@ function compare(a,b) {
           delete data[l0]['siblings'][l1]['news_item'];
         }
       } 
+*/
+
       data = {name: 'root', siblings: data};
-//console.log(data);
+      console.log(data);
 
       var treemap = d3.treemap()
         .size([width*0.95, height*0.95])
         .padding(2);
 
+      // create tree for d3 treemap  
       var root = d3.hierarchy(data, function(d) {return d.siblings;})
 
+      // compute area for all nodes in tree
       root.sum(function(d) {
         return +d.value;
       });
       
       treemap(root);
 
-// d3.select('svg g')
-//   .selectAll('rect')
-//   .data(root.descendants())
-//   .enter()
-//   .append('rect')
-//   .attr('x', function(d) { return d.x0; })
-//   .attr('y', function(d) { return d.y0; })
-//   .attr('width', function(d) { return d.x1 - d.x0; })
-//   .attr('height', function(d) { return d.y1 - d.y0; })
+    // // check what've we got (look at treemap)
+    // d3.select('svg g')
+    //   .selectAll('rect')
+    //   .data(root.descendants())
+    //   .enter()
+    //   .append('rect')
+    //   .attr('x', function(d) { return d.x0; })
+    //   .attr('y', function(d) { return d.y0; })
+    //   .attr('width', function(d) { return d.x1 - d.x0; })
+    //   .attr('height', function(d) { return d.y1 - d.y0; })
 
 
       //console.log(root.descendants());  
-      randomize(root.descendants());
+      place_labels(root.descendants());
+
     });
 
        
