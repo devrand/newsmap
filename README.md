@@ -4,8 +4,8 @@ The task was to show a vast landscape of content, by showing many headers from a
 
 So we need a layout which will place similar news close together, using some automatic label placement to prevent overlapping.
 To achieve this I've used two steps (in prepare_labels_treemap.html):
-1. created initial positions for each label with a help of d3.treemap layout algo
-2. deployed simulating annealing algo to adjust labels into positions where they will not be overlapped. 
+1. created initial positions for each label with a help of [d3.treemap](https://beta.observablehq.com/@mbostock/d3-treemap) layout algo
+2. deployed [simulating annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to adjust labels into positions where they will not be overlapped. 
 
 Index.html is for displaying the result, with d3.zoom on the canvas
 
